@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -24,6 +22,7 @@ font-family:'Noto Sans KR','Malgun Gothic',sans-serif;
 --scorch:#E63946;
 --haze:#FFF3E0;
 --dusk:#3A2E39;
+--cool:#2A6F97;
 }
 
 body{
@@ -38,7 +37,6 @@ background:
 background-attachment:fixed;
 }
 
-/* 아지랑이(heat haze) 레이어 */
 body::before,
 body::after{
 content:"";
@@ -125,7 +123,7 @@ color:#a8351f;
 
 .selected-region{
 font-size:14px;
-background:linear-gradient(135deg,var(--ember),var(--scorch));
+background:linear-gradient(135deg,var(--ember),#E63946);
 color:#fff;
 padding:6px 16px;
 border-radius:999px;
@@ -142,7 +140,7 @@ justify-content:center;
 }
 
 #koreaMap{
-width:min(100%,320px);
+width:min(100%,300px);
 height:auto;
 flex-shrink:0;
 }
@@ -194,6 +192,71 @@ width:120px;height:10px;border-radius:6px;
 background:linear-gradient(90deg,#FFD966,#FF7F3F,#D62828);
 }
 
+/* ---- controls (year / month) ---- */
+.controls{
+background:rgba(255,255,255,0.7);
+backdrop-filter:blur(8px);
+border-radius:20px;
+padding:16px 18px;
+box-shadow:0 8px 20px rgba(180,60,30,0.15);
+margin-bottom:22px;
+display:flex;
+flex-wrap:wrap;
+gap:16px;
+align-items:center;
+justify-content:center;
+}
+.control-group{
+display:flex;
+align-items:center;
+gap:8px;
+flex-wrap:wrap;
+justify-content:center;
+}
+.control-label{
+font-size:13px;
+font-weight:700;
+color:#8a4a2f;
+margin-right:2px;
+}
+.chip{
+cursor:pointer;
+border:none;
+padding:7px 16px;
+border-radius:999px;
+font-size:13px;
+font-weight:700;
+background:rgba(255,255,255,0.9);
+color:#a8351f;
+box-shadow:0 2px 6px rgba(180,60,30,0.15);
+transition:transform .12s ease, background .12s ease, color .12s ease;
+}
+.chip:hover{ transform:translateY(-1px); }
+.chip.active{
+background:linear-gradient(135deg,var(--ember),#E63946);
+color:#fff;
+box-shadow:0 4px 10px rgba(230,57,70,0.4);
+}
+
+.data-note{
+text-align:center;
+font-size:11.5px;
+color:#a97a5f;
+margin:-8px 0 20px;
+line-height:1.6;
+}
+.badge-est{
+display:inline-block;
+font-size:10.5px;
+font-weight:700;
+background:rgba(58,46,57,0.12);
+color:#5c4433;
+padding:2px 8px;
+border-radius:999px;
+margin-left:6px;
+vertical-align:middle;
+}
+
 .cards{
 display:grid;
 grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
@@ -223,25 +286,13 @@ color:var(--ember);
 }
 
 .value.warn{
-color:var(--scorch);
+color:#E63946;
 }
 
 .card .sub{
 font-size:12px;
 color:#a97a5f;
 margin-top:4px;
-}
-
-.graph-row{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:18px;
-margin-bottom:18px;
-}
-
-@media (max-width:800px){
-.graph-row{ grid-template-columns:1fr; }
-.map-wrap{ flex-direction:column; }
 }
 
 .graph-box,
@@ -258,32 +309,37 @@ margin-bottom:18px;
 text-align:center;
 font-size:18px;
 font-weight:700;
-margin-bottom:10px;
+margin-bottom:2px;
 color:#8a4a2f;
+}
+.graph-sub{
+text-align:center;
+font-size:12px;
+color:#a97a5f;
+margin-bottom:10px;
 }
 
 svg.chart{
 width:100%;
-height:300px;
+height:340px;
 }
 
-.point{
-fill:var(--ember);
+.legend-inline{
+display:flex;
+justify-content:center;
+gap:22px;
+font-size:12px;
+color:#5c4433;
+margin-top:6px;
+flex-wrap:wrap;
 }
-
-.chart-line{
-stroke:var(--ember);
-stroke-width:4;
-fill:none;
+.legend-inline span{
+display:flex;
+align-items:center;
+gap:6px;
 }
-
-.bar{
-fill:var(--scorch);
-}
-
-.axis{
-stroke:#8a4a2f;
-stroke-width:2;
+.dot{
+width:12px;height:12px;border-radius:3px;display:inline-block;
 }
 
 .analysis{
@@ -320,7 +376,7 @@ text-shadow:0 1px 3px rgba(0,0,0,0.15);
 <div class="container">
 
 <h1>🌡️ 폭염·온열질환 분석 대시보드 📈</h1>
-<div class="subtitle">기온 추이(참고용 예시값) × 온열질환자 수(실측 데이터, 2020~2024)</div>
+<div class="subtitle">기온 추이(실측, 기상자료) × 온열질환자 수(실측/추정, 2020~2024)</div>
 
 <div class="map-section">
   <div class="map-header">
@@ -339,12 +395,24 @@ text-shadow:0 1px 3px rgba(0,0,0,0.15);
       <g id="mapMarkers"></g>
     </svg>
     <div class="legend">
-      <span>2024년 온열질환자 수 적음</span>
+      <span>선택한 연도·월 온열질환자 적음</span>
       <div class="legend-bar"></div>
       <span>많음</span>
     </div>
   </div>
 </div>
+
+<div class="controls">
+  <div class="control-group">
+    <span class="control-label">📅 연도</span>
+    <div id="yearChips"></div>
+  </div>
+  <div class="control-group">
+    <span class="control-label">🗓️ 월</span>
+    <div id="monthChips"></div>
+  </div>
+</div>
+<div class="data-note" id="dataAvailNote"></div>
 
 <div class="cards">
 
@@ -364,26 +432,23 @@ text-shadow:0 1px 3px rgba(0,0,0,0.15);
 </div>
 
 <div class="card">
-<h2>🏥 온열질환자 수(2024)</h2>
-<div class="value warn" id="patients2024"></div>
+<h2>🏥 온열질환자 수<span id="patientsBadge"></span></h2>
+<div class="value warn" id="patientsCount"></div>
 <div class="sub" id="patientsDelta"></div>
 </div>
 
 </div>
 
-<div class="graph-row">
-
 <div class="graph-box">
-<div class="graph-title">📈 여름 평균기온 추이</div>
-<svg class="chart" id="graph"></svg>
+<div class="graph-title">📊 연도별 한눈에 보기 — 평균기온 × 온열질환자 수</div>
+<div class="graph-sub" id="combinedSub"></div>
+<svg class="chart" id="graphCombined"></svg>
+<div class="legend-inline">
+  <span><span class="dot" style="background:#E63946"></span> 온열질환자 수 (막대, 왼쪽 축)</span>
+  <span><span class="dot" style="background:#2A6F97"></span> 평균기온 (선, 오른쪽 축)</span>
+  <span><span class="dot" style="background:repeating-linear-gradient(45deg,#c9b8ab,#c9b8ab 3px,#e8ddd3 3px,#e8ddd3 6px)"></span> 빗금 막대 = 추정치</span>
 </div>
-
-<div class="graph-box">
-<div class="graph-title">🏥 연도별 온열질환자 수</div>
-<svg class="chart" id="graphPatients"></svg>
 <div class="source-note" id="sourceNote"></div>
-</div>
-
 </div>
 
 <div class="analysis">
@@ -392,70 +457,109 @@ text-shadow:0 1px 3px rgba(0,0,0,0.15);
 </div>
 
 <footer>
-※ 기온 데이터는 예시(참고)값이며, 온열질환자 수는 실제 공공데이터를 집계한 값입니다.<br>
-서울·부산·대구·인천·대전·울산: 질병관리청 온열질환 응급실감시체계 신고건수(발생시도 기준) / 수원·양평·전주·거제: 국민건강보험공단 시군구별 실제 진료인원 합산<br>
-두 통계는 산출 방식(신고 기반 vs 진료 기반)이 달라 지역 간 절대값을 직접 비교하기보다 각 지역의 연도별 증가 추세를 보는 용도로 활용하시길 권장합니다. 건강보험공단 자료 중 소수(5명 미만) 마스킹(*) 구간은 근사값(2명)으로 처리했습니다.
+※ 기온 데이터: 기상청 지점별 월평균/최고/최저기온 실측 자료(2020~2024, 6~8월)<br>
+서울·부산·대구·인천·대전·울산: 질병관리청 온열질환 응급실감시체계 신고건수(발생시도 기준, 2020~2022 실측 / 2023·2024는 자료 미제공으로 추정치) / 수원·양평·전주·거제: 국민건강보험공단 시군구별 자료 기반 값(이번 업로드에는 해당 시군구 자료가 포함되지 않아 전 기간 추정치)<br>
+두 통계는 산출 방식(신고 기반 vs 진료 기반)이 달라 지역 간 절대값을 직접 비교하기보다 각 지역의 연도별 증가 추세를 보는 용도로 활용하시길 권장합니다. 월별 온열질환자 수는 신고일 기준 실측(2020~2022, 6개 시·도)이 있는 경우만 제공되며, 그 외에는 연간 수치를 표시합니다.
 </footer>
 
 </div>
 
 <script>
+const DATA = {"서울": {"x": 150, "y": 95, "source": "kcdc", "temp": {"2020-06": {"avg": 23.9, "low": 19.9, "high": 29.0}, "2020-07": {"avg": 24.1, "low": 21.1, "high": 28.0}, "2020-08": {"avg": 26.5, "low": 24.4, "high": 29.3}, "2021-06": {"avg": 22.8, "low": 18.9, "high": 27.6}, "2021-07": {"avg": 28.1, "low": 24.6, "high": 32.2}, "2021-08": {"avg": 25.9, "low": 22.8, "high": 29.7}, "2022-06": {"avg": 23.3, "low": 19.8, "high": 27.5}, "2022-07": {"avg": 27.3, "low": 24.2, "high": 31.0}, "2022-08": {"avg": 25.7, "low": 23.1, "high": 28.9}, "2023-06": {"avg": 23.4, "low": 19.7, "high": 27.9}, "2023-07": {"avg": 26.7, "low": 23.9, "high": 30.2}, "2023-08": {"avg": 27.2, "low": 24.3, "high": 30.8}, "2024-06": {"avg": 24.6, "low": 19.9, "high": 30.1}, "2024-07": {"avg": 26.6, "low": 24.1, "high": 29.6}, "2024-08": {"avg": 29.3, "low": 26.3, "high": 33.3}}, "patientsMonthly": {"2020-06": 14, "2020-07": 2, "2020-08": 22, "2021-06": 6, "2021-07": 93, "2021-08": 21, "2022-06": 14, "2022-07": 69, "2022-08": 23}, "patientsYearly": {"2020": 38, "2021": 120, "2022": 106, "2023": 209, "2024": 241}, "estimatedYears": [2023, 2024]}, "부산": {"x": 240, "y": 370, "source": "kcdc", "temp": {"2020-06": {"avg": 22.4, "low": 19.5, "high": 26.6}, "2020-07": {"avg": 22.1, "low": 20.3, "high": 24.8}, "2020-08": {"avg": 27.2, "low": 24.8, "high": 30.4}, "2021-06": {"avg": 21.9, "low": 19.3, "high": 25.4}, "2021-07": {"avg": 26.3, "low": 24.0, "high": 29.5}, "2021-08": {"avg": 26.2, "low": 23.8, "high": 29.4}, "2022-06": {"avg": 21.7, "low": 19.4, "high": 24.9}, "2022-07": {"avg": 26.2, "low": 23.7, "high": 29.7}, "2022-08": {"avg": 26.4, "low": 24.0, "high": 29.7}, "2023-06": {"avg": 22.5, "low": 19.9, "high": 26.0}, "2023-07": {"avg": 25.5, "low": 23.3, "high": 28.5}, "2023-08": {"avg": 27.8, "low": 25.5, "high": 31.0}, "2024-06": {"avg": 22.6, "low": 19.7, "high": 26.4}, "2024-07": {"avg": 26.0, "low": 23.8, "high": 29.0}, "2024-08": {"avg": 29.1, "low": 26.3, "high": 32.9}}, "patientsMonthly": {"2020-06": 5, "2020-07": 5, "2020-08": 41, "2021-06": 2, "2021-07": 20, "2021-08": 23, "2022-06": 5, "2022-07": 28, "2022-08": 20}, "patientsYearly": {"2020": 51, "2021": 45, "2022": 53, "2023": 96, "2024": 132}, "estimatedYears": [2023, 2024]}, "대구": {"x": 215, "y": 300, "source": "kcdc", "temp": {"2020-06": {"avg": 24.5, "low": 19.3, "high": 30.5}, "2020-07": {"avg": 23.2, "low": 20.2, "high": 26.8}, "2020-08": {"avg": 28.6, "low": 24.8, "high": 33.3}, "2021-06": {"avg": 23.2, "low": 18.9, "high": 28.5}, "2021-07": {"avg": 26.9, "low": 22.9, "high": 32.1}, "2021-08": {"avg": 25.7, "low": 22.4, "high": 30.5}, "2022-06": {"avg": 24.3, "low": 19.8, "high": 29.7}, "2022-07": {"avg": 27.5, "low": 23.7, "high": 32.4}, "2022-08": {"avg": 26.9, "low": 23.4, "high": 31.4}, "2023-06": {"avg": 24.0, "low": 19.3, "high": 29.6}, "2023-07": {"avg": 26.7, "low": 23.1, "high": 31.1}, "2023-08": {"avg": 27.5, "low": 24.0, "high": 31.9}, "2024-06": {"avg": 24.6, "low": 19.4, "high": 30.4}, "2024-07": {"avg": 27.8, "low": 24.5, "high": 31.7}, "2024-08": {"avg": 29.1, "low": 25.0, "high": 34.4}}, "patientsMonthly": {"2020-06": 2, "2020-07": 3, "2020-08": 21, "2021-06": 3, "2021-07": 21, "2021-08": 8, "2022-06": 14, "2022-07": 6, "2022-08": 7}, "patientsYearly": {"2020": 26, "2021": 32, "2022": 27, "2023": 61, "2024": 69}, "estimatedYears": [2023, 2024]}, "인천": {"x": 100, "y": 100, "source": "kcdc", "temp": {"2020-06": {"avg": 21.8, "low": 18.7, "high": 25.8}, "2020-07": {"avg": 23.2, "low": 20.8, "high": 26.2}, "2020-08": {"avg": 25.9, "low": 24.2, "high": 28.1}, "2021-06": {"avg": 21.6, "low": 18.6, "high": 25.3}, "2021-07": {"avg": 27.2, "low": 24.6, "high": 30.4}, "2021-08": {"avg": 25.5, "low": 22.9, "high": 28.6}, "2022-06": {"avg": 21.9, "low": 19.2, "high": 25.4}, "2022-07": {"avg": 26.2, "low": 23.8, "high": 29.5}, "2022-08": {"avg": 24.9, "low": 22.7, "high": 27.3}, "2023-06": {"avg": 21.8, "low": 19.0, "high": 25.4}, "2023-07": {"avg": 25.7, "low": 23.4, "high": 28.4}, "2023-08": {"avg": 26.6, "low": 24.2, "high": 29.7}, "2024-06": {"avg": 22.7, "low": 19.6, "high": 26.7}, "2024-07": {"avg": 25.7, "low": 23.6, "high": 28.3}, "2024-08": {"avg": 28.8, "low": 26.3, "high": 32.2}}, "patientsMonthly": {"2020-06": 6, "2020-07": 0, "2020-08": 20, "2021-06": 3, "2021-07": 68, "2021-08": 20, "2022-06": 6, "2022-07": 38, "2022-08": 20}, "patientsYearly": {"2020": 26, "2021": 91, "2022": 64, "2023": 121, "2024": 208}, "estimatedYears": [2023, 2024]}, "대전": {"x": 165, "y": 215, "source": "kcdc", "temp": {"2020-06": {"avg": 24.1, "low": 20.0, "high": 29.0}, "2020-07": {"avg": 23.6, "low": 20.7, "high": 27.2}, "2020-08": {"avg": 27.5, "low": 24.6, "high": 31.5}, "2021-06": {"avg": 23.5, "low": 19.1, "high": 28.5}, "2021-07": {"avg": 27.8, "low": 24.0, "high": 32.3}, "2021-08": {"avg": 25.8, "low": 22.6, "high": 29.9}, "2022-06": {"avg": 24.1, "low": 19.8, "high": 29.4}, "2022-07": {"avg": 27.0, "low": 23.4, "high": 31.5}, "2022-08": {"avg": 25.7, "low": 22.7, "high": 29.6}, "2023-06": {"avg": 23.6, "low": 18.9, "high": 29.2}, "2023-07": {"avg": 25.8, "low": 22.6, "high": 30.2}, "2023-08": {"avg": 27.0, "low": 23.2, "high": 31.7}, "2024-06": {"avg": 24.0, "low": 18.5, "high": 30.0}, "2024-07": {"avg": 26.6, "low": 23.7, "high": 30.4}, "2024-08": {"avg": 28.7, "low": 25.0, "high": 33.5}}, "patientsMonthly": {"2020-06": 7, "2020-07": 2, "2020-08": 9, "2021-06": 4, "2021-07": 15, "2021-08": 8, "2022-06": 4, "2022-07": 12, "2022-08": 5}, "patientsYearly": {"2020": 18, "2021": 27, "2022": 21, "2023": 43, "2024": 72}, "estimatedYears": [2023, 2024]}, "울산": {"x": 250, "y": 335, "source": "kcdc", "temp": {"2020-06": {"avg": 22.7, "low": 18.5, "high": 27.6}, "2020-07": {"avg": 22.1, "low": 19.8, "high": 25.3}, "2020-08": {"avg": 27.6, "low": 24.4, "high": 31.8}, "2021-06": {"avg": 21.7, "low": 18.2, "high": 25.8}, "2021-07": {"avg": 25.9, "low": 22.8, "high": 29.8}, "2021-08": {"avg": 25.3, "low": 22.5, "high": 29.2}, "2022-06": {"avg": 22.4, "low": 19.1, "high": 26.6}, "2022-07": {"avg": 26.0, "low": 22.9, "high": 30.0}, "2022-08": {"avg": 26.4, "low": 23.4, "high": 30.2}, "2023-06": {"avg": 22.3, "low": 18.4, "high": 26.9}, "2023-07": {"avg": 25.8, "low": 22.5, "high": 29.8}, "2023-08": {"avg": 26.5, "low": 23.6, "high": 30.2}, "2024-06": {"avg": 22.6, "low": 18.4, "high": 27.4}, "2024-07": {"avg": 26.9, "low": 23.8, "high": 30.6}, "2024-08": {"avg": 28.0, "low": 24.5, "high": 32.3}}, "patientsMonthly": {"2020-06": 3, "2020-07": 3, "2020-08": 18, "2021-06": 0, "2021-07": 17, "2021-08": 15, "2022-06": 2, "2022-07": 13, "2022-08": 11}, "patientsYearly": {"2020": 24, "2021": 32, "2022": 26, "2023": 70, "2024": 114}, "estimatedYears": [2023, 2024]}, "수원": {"x": 155, "y": 120, "source": "kbi", "temp": {"2020-06": {"avg": 23.0, "low": 18.6, "high": 28.5}, "2020-07": {"avg": 23.8, "low": 20.5, "high": 27.9}, "2020-08": {"avg": 26.7, "low": 24.1, "high": 30.2}, "2021-06": {"avg": 22.5, "low": 18.3, "high": 27.7}, "2021-07": {"avg": 27.7, "low": 23.8, "high": 32.5}, "2021-08": {"avg": 25.7, "low": 22.5, "high": 29.9}, "2022-06": {"avg": 23.1, "low": 19.2, "high": 27.7}, "2022-07": {"avg": 27.1, "low": 23.7, "high": 31.2}, "2022-08": {"avg": 25.5, "low": 22.6, "high": 29.2}, "2023-06": {"avg": 22.4, "low": 18.3, "high": 27.4}, "2023-07": {"avg": 25.9, "low": 22.8, "high": 29.9}, "2023-08": {"avg": 26.7, "low": 23.3, "high": 30.9}, "2024-06": {"avg": 22.9, "low": 17.6, "high": 28.8}, "2024-07": {"avg": 26.1, "low": 23.4, "high": 29.7}, "2024-08": {"avg": 28.4, "low": 25.0, "high": 33.0}}, "patientsMonthly": {}, "patientsYearly": {"2020": 65, "2021": 176, "2022": 180, "2023": 312, "2024": 351}, "estimatedYears": [2020, 2021, 2022, 2023, 2024]}, "양평": {"x": 185, "y": 100, "source": "kbi", "temp": {"2020-06": {"avg": 23.5, "low": 18.7, "high": 28.9}, "2020-07": {"avg": 23.4, "low": 19.9, "high": 27.4}, "2020-08": {"avg": 25.6, "low": 23.0, "high": 29.5}, "2021-06": {"avg": 22.0, "low": 17.5, "high": 27.4}, "2021-07": {"avg": 26.3, "low": 22.4, "high": 31.3}, "2021-08": {"avg": 24.5, "low": 21.2, "high": 28.9}, "2022-06": {"avg": 22.5, "low": 18.3, "high": 27.2}, "2022-07": {"avg": 26.0, "low": 22.6, "high": 30.4}, "2022-08": {"avg": 24.7, "low": 21.8, "high": 28.4}, "2023-06": {"avg": 22.9, "low": 18.4, "high": 27.8}, "2023-07": {"avg": 25.6, "low": 22.3, "high": 29.9}, "2023-08": {"avg": 26.3, "low": 22.8, "high": 30.7}, "2024-06": {"avg": 23.1, "low": 17.4, "high": 29.3}, "2024-07": {"avg": 25.8, "low": 22.8, "high": 29.6}, "2024-08": {"avg": 27.9, "low": 24.3, "high": 32.6}}, "patientsMonthly": {}, "patientsYearly": {"2020": 8, "2021": 11, "2022": 23, "2023": 24, "2024": 35}, "estimatedYears": [2020, 2021, 2022, 2023, 2024]}, "전주": {"x": 120, "y": 270, "source": "kbi", "temp": {"2020-06": {"avg": 23.4, "low": 19.5, "high": 28.7}, "2020-07": {"avg": 23.5, "low": 20.8, "high": 27.3}, "2020-08": {"avg": 27.7, "low": 24.6, "high": 32.0}, "2021-06": {"avg": 23.0, "low": 18.9, "high": 28.3}, "2021-07": {"avg": 27.2, "low": 23.5, "high": 32.1}, "2021-08": {"avg": 25.9, "low": 22.4, "high": 30.5}, "2022-06": {"avg": 23.7, "low": 19.8, "high": 28.8}, "2022-07": {"avg": 27.0, "low": 23.7, "high": 31.1}, "2022-08": {"avg": 26.3, "low": 23.4, "high": 30.1}, "2023-06": {"avg": 23.3, "low": 19.2, "high": 28.9}, "2023-07": {"avg": 26.5, "low": 23.4, "high": 30.5}, "2023-08": {"avg": 27.5, "low": 24.0, "high": 31.9}, "2024-06": {"avg": 23.8, "low": 19.3, "high": 29.2}, "2024-07": {"avg": 27.4, "low": 24.5, "high": 31.1}, "2024-08": {"avg": 29.1, "low": 25.5, "high": 34.0}}, "patientsMonthly": {}, "patientsYearly": {"2020": 117, "2021": 136, "2022": 138, "2023": 262, "2024": 332}, "estimatedYears": [2020, 2021, 2022, 2023, 2024]}, "거제": {"x": 220, "y": 395, "source": "kbi", "temp": {"2020-06": {"avg": 22.5, "low": 18.7, "high": 27.4}, "2020-07": {"avg": 22.3, "low": 20.2, "high": 25.4}, "2020-08": {"avg": 27.1, "low": 24.6, "high": 30.3}, "2021-06": {"avg": 21.7, "low": 18.3, "high": 25.8}, "2021-07": {"avg": 26.1, "low": 23.4, "high": 29.5}, "2021-08": {"avg": 25.8, "low": 23.0, "high": 29.2}, "2022-06": {"avg": 21.7, "low": 19.2, "high": 25.0}, "2022-07": {"avg": 26.0, "low": 23.1, "high": 29.8}, "2022-08": {"avg": 26.1, "low": 23.5, "high": 29.1}, "2023-06": {"avg": 22.2, "low": 18.8, "high": 26.2}, "2023-07": {"avg": 25.2, "low": 22.7, "high": 28.4}, "2023-08": {"avg": 27.1, "low": 24.3, "high": 30.6}, "2024-06": {"avg": 22.2, "low": 18.2, "high": 26.9}, "2024-07": {"avg": 25.8, "low": 23.9, "high": 28.4}, "2024-08": {"avg": 28.2, "low": 24.8, "high": 32.4}}, "patientsMonthly": {}, "patientsYearly": {"2020": 50, "2021": 63, "2022": 100, "2023": 177, "2024": 252}, "estimatedYears": [2020, 2021, 2022, 2023, 2024]}};
 
-const years=["2020","2021","2022","2023","2024"];
-
-const climateData = {
-
-서울:{high:31.2,low:23.6,avg:27.4,yearly:[25.1,25.4,25.8,26.2,26.6],patients:[40,125,116,209,241],source:"kcdc",x:150,y:95},
-부산:{high:29.8,low:24.3,avg:27.0,yearly:[24.8,25.0,25.2,25.5,25.8],patients:[55,48,54,96,132],source:"kcdc",x:240,y:370},
-대구:{high:33.1,low:24.1,avg:28.6,yearly:[26.0,26.3,26.7,27.1,27.6],patients:[26,32,32,61,69],source:"kcdc",x:215,y:300},
-인천:{high:29.4,low:23.1,avg:26.2,yearly:[24.0,24.2,24.6,25.0,25.4],patients:[29,99,77,121,208],source:"kcdc",x:100,y:100},
-대전:{high:31.8,low:23.5,avg:27.6,yearly:[25.0,25.3,25.7,26.1,26.5],patients:[19,30,25,43,72],source:"kcdc",x:165,y:215},
-울산:{high:30.5,low:24.0,avg:27.2,yearly:[24.7,25.0,25.4,25.8,26.1],patients:[26,32,26,70,114],source:"kcdc",x:250,y:335},
-수원:{high:31.1,low:23.4,avg:27.0,yearly:[24.9,25.2,25.5,25.9,26.3],patients:[65,176,180,312,351],source:"kbi",x:155,y:120},
-양평:{high:29.9,low:22.1,avg:26.0,yearly:[23.8,24.1,24.5,24.9,25.3],patients:[8,11,23,24,35],source:"kbi",x:185,y:100},
-전주:{high:32.0,low:23.8,avg:27.9,yearly:[25.4,25.8,26.1,26.5,27.0],patients:[117,136,138,262,332],source:"kbi",x:120,y:270},
-거제:{high:29.5,low:24.5,avg:27.0,yearly:[24.6,24.9,25.2,25.6,26.0],patients:[50,63,100,177,252],source:"kbi",x:220,y:395}
-
-};
+const regions = Object.keys(DATA);
+const years = [2020,2021,2022,2023,2024];
+const months = [
+  {key:"all", label:"전체(6~8월)"},
+  {key:"06", label:"6월"},
+  {key:"07", label:"7월"},
+  {key:"08", label:"8월"}
+];
 
 const sourceLabel = {
   kcdc: "출처: 질병관리청 온열질환 감시데이터(발생시도 기준 신고건수)",
-  kbi: "출처: 국민건강보험공단 시군구별 온열질환자 수(실제 진료인원 합산)"
+  kbi: "출처: 국민건강보험공단 시군구별 온열질환자 수 기반 값(이번 자료엔 미포함, 추정치)"
 };
 
 let currentRegion = "서울";
+let currentYear = 2024;
+let currentMonth = "all";
 
-// ---- 지도 마커 생성 ----
-const maxPatients2024 = Math.max(...Object.values(climateData).map(d=>d.patients[4]));
+/* ---------------- helpers ---------------- */
+
+function monthKey(year, m){ return `${year}-${m}`; }
+
+function getTempFor(region, year, monthKey_){
+  const d = DATA[region].temp;
+  if(monthKey_ !== "all"){
+    const rec = d[monthKey(year, monthKey_)];
+    return rec ? {avg:rec.avg, low:rec.low, high:rec.high} : null;
+  }
+  // average across 06,07,08
+  const ms = ["06","07","08"].map(m=>d[monthKey(year,m)]).filter(Boolean);
+  if(ms.length===0) return null;
+  const avg = ms.reduce((s,r)=>s+r.avg,0)/ms.length;
+  const low = ms.reduce((s,r)=>s+r.low,0)/ms.length;
+  const high = ms.reduce((s,r)=>s+r.high,0)/ms.length;
+  return {avg:Math.round(avg*10)/10, low:Math.round(low*10)/10, high:Math.round(high*10)/10};
+}
+
+function getPatientsFor(region, year, monthKey_){
+  const info = DATA[region];
+  const yearlyVal = info.patientsYearly[String(year)];
+  const yearIsEstimated = info.estimatedYears.includes(year);
+
+  if(monthKey_ === "all"){
+    return {value: yearlyVal, estimated: yearIsEstimated, granularity:"year"};
+  }
+  const mk = monthKey(year, monthKey_);
+  if(info.patientsMonthly && info.patientsMonthly.hasOwnProperty(mk)){
+    return {value: info.patientsMonthly[mk], estimated:false, granularity:"month"};
+  }
+  // no monthly data -> even split of yearly value as rough estimate
+  const est = yearlyVal===undefined ? null : Math.round(yearlyVal/3);
+  return {value: est, estimated:true, granularity:"year-split"};
+}
+
+function fmtTemp(v){ return (v===null||v===undefined) ? "-" : v.toFixed(1)+"℃"; }
+
+/* ---------------- map markers ---------------- */
+
+const markersGroup = document.getElementById("mapMarkers");
 
 function markerColor(ratio){
-  // 노랑(hue 48) -> 빨강(hue 3) 보간
   const hue = 48 - ratio*45;
   const light = 62 - ratio*17;
   return `hsl(${hue},92%,${light}%)`;
 }
 
-const markersGroup = document.getElementById("mapMarkers");
+function buildMarkers(){
+  markersGroup.innerHTML = "";
+  const vals = regions.map(r=>getPatientsFor(r, currentYear, currentMonth).value || 0);
+  const maxVal = Math.max(...vals, 1);
 
-for(const region in climateData){
-  const d = climateData[region];
-  const ratio = d.patients[4]/maxPatients2024;
-  const radius = 9 + ratio*13;
-  const color = markerColor(ratio);
+  regions.forEach(region=>{
+    const d = DATA[region];
+    const p = getPatientsFor(region, currentYear, currentMonth);
+    const val = p.value || 0;
+    const ratio = val / maxVal;
+    const radius = 9 + ratio*13;
+    const color = markerColor(ratio);
 
-  const g = document.createElementNS("http://www.w3.org/2000/svg","g");
-  g.setAttribute("class","region-btn");
-  g.setAttribute("data-region",region);
-  g.style.cursor="pointer";
+    const g = document.createElementNS("http://www.w3.org/2000/svg","g");
+    g.setAttribute("class","region-btn");
+    g.setAttribute("data-region",region);
+    g.style.cursor="pointer";
 
-  g.innerHTML = `
-    <circle class="marker-halo" cx="${d.x}" cy="${d.y}" r="${radius}" fill="${color}"></circle>
-    <circle class="marker-core" data-marker="${region}" cx="${d.x}" cy="${d.y}" r="${radius*0.62}" fill="${color}"></circle>
-    <text class="marker-label" x="${d.x}" y="${d.y - radius - 5}">${region}</text>
-  `;
-
-  g.addEventListener("click", ()=> selectRegion(region));
-  markersGroup.appendChild(g);
+    g.innerHTML = `
+      <circle class="marker-halo" cx="${d.x}" cy="${d.y}" r="${radius}" fill="${color}"></circle>
+      <circle class="marker-core" data-marker="${region}" cx="${d.x}" cy="${d.y}" r="${radius*0.62}" fill="${color}"></circle>
+      <text class="marker-label" x="${d.x}" y="${d.y - radius - 5}">${region}</text>
+    `;
+    g.addEventListener("click", ()=> selectRegion(region));
+    markersGroup.appendChild(g);
+  });
+  refreshMarkerSelection();
 }
 
 function refreshMarkerSelection(){
@@ -468,118 +572,196 @@ function refreshMarkerSelection(){
   });
 }
 
-function drawLineGraph(data){
+/* ---------------- controls (chips) ---------------- */
 
-const svg=document.getElementById("graph");
-svg.innerHTML="";
+function buildChips(){
+  const yEl = document.getElementById("yearChips");
+  yEl.innerHTML = years.map(y=>`<button class="chip" data-year="${y}">${y}</button>`).join("");
+  yEl.querySelectorAll(".chip").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      currentYear = parseInt(btn.getAttribute("data-year"));
+      refreshAll();
+    });
+  });
 
-const width=800;
-const height=280;
-
-svg.setAttribute("viewBox",`0 0 ${width} ${height}`);
-
-const min=Math.min(...data)-1;
-const max=Math.max(...data)+1;
-
-let points="";
-
-data.forEach((temp,index)=>{
-
-const x=70+(index*160);
-const y=height-40-((temp-min)/(max-min))*200;
-
-points+=`${x},${y} `;
-
-svg.innerHTML+=`
-<circle class="point" cx="${x}" cy="${y}" r="6"></circle>
-<text x="${x-15}" y="${height-10}" font-size="12">${years[index]}</text>
-<text x="${x-10}" y="${y-12}" font-size="12">${temp}℃</text>
-`;
-
-});
-
-svg.innerHTML+=`
-<line class="axis" x1="50" y1="20" x2="50" y2="${height-30}"></line>
-<line class="axis" x1="50" y1="${height-30}" x2="${width-20}" y2="${height-30}"></line>
-<polyline class="chart-line" points="${points}"></polyline>
-`;
-
+  const mEl = document.getElementById("monthChips");
+  mEl.innerHTML = months.map(m=>`<button class="chip" data-month="${m.key}">${m.label}</button>`).join("");
+  mEl.querySelectorAll(".chip").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      currentMonth = btn.getAttribute("data-month");
+      refreshAll();
+    });
+  });
 }
 
-function drawBarGraph(data){
-
-const svg=document.getElementById("graphPatients");
-svg.innerHTML="";
-
-const width=800;
-const height=280;
-
-svg.setAttribute("viewBox",`0 0 ${width} ${height}`);
-
-const max=Math.max(...data)*1.15;
-const barWidth=70;
-
-data.forEach((val,index)=>{
-
-const x=90+(index*150);
-const barHeight=((val/max)*200);
-const y=height-30-barHeight;
-
-svg.innerHTML+=`
-<rect class="bar" x="${x}" y="${y}" width="${barWidth}" height="${barHeight}" rx="6"></rect>
-<text x="${x+barWidth/2}" y="${y-8}" font-size="13" text-anchor="middle">${val}명</text>
-<text x="${x+barWidth/2}" y="${height-10}" font-size="12" text-anchor="middle">${years[index]}</text>
-`;
-
-});
-
-svg.innerHTML+=`
-<line class="axis" x1="50" y1="20" x2="50" y2="${height-30}"></line>
-<line class="axis" x1="50" y1="${height-30}" x2="${width-20}" y2="${height-30}"></line>
-`;
-
+function refreshChipStates(){
+  document.querySelectorAll("#yearChips .chip").forEach(b=>{
+    b.classList.toggle("active", parseInt(b.getAttribute("data-year"))===currentYear);
+  });
+  document.querySelectorAll("#monthChips .chip").forEach(b=>{
+    b.classList.toggle("active", b.getAttribute("data-month")===currentMonth);
+  });
 }
 
-function updateData(region){
+/* ---------------- combined chart (bars + line) ---------------- */
 
-const data=climateData[region];
+function drawCombinedGraph(region){
+  const svg = document.getElementById("graphCombined");
+  svg.innerHTML = "";
 
-document.getElementById("highTemp").innerText=data.high+"℃";
-document.getElementById("lowTemp").innerText=data.low+"℃";
-document.getElementById("avgTemp").innerText=data.avg+"℃";
+  const width = 820, height = 360;
+  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
 
-const last=data.patients[data.patients.length-1];
-const prev=data.patients[data.patients.length-2];
-const deltaPct=(((last-prev)/prev)*100).toFixed(0);
+  const tempSeries = years.map(y=>getTempFor(region, y, currentMonth));
+  const patientSeries = years.map(y=>getPatientsFor(region, y, currentMonth));
 
-document.getElementById("patients2024").innerText=last+"명";
-document.getElementById("patientsDelta").innerText=
-  (deltaPct>=0?"전년比 +":"전년比 ")+deltaPct+"%";
+  const patVals = patientSeries.map(p=>p.value===null||p.value===undefined?0:p.value);
+  const tempVals = tempSeries.map(t=>t?t.avg:null).filter(v=>v!==null);
 
-drawLineGraph(data.yearly);
-drawBarGraph(data.patients);
+  const maxPat = Math.max(...patVals, 1) * 1.2;
+  const minTemp = Math.min(...tempVals) - 1;
+  const maxTemp = Math.max(...tempVals) + 1;
 
-document.getElementById("sourceNote").innerText = sourceLabel[data.source];
-document.getElementById("selectedRegionLabel").innerText = region;
+  const plotLeft = 60, plotRight = width-60, plotTop = 30, plotBottom = height-50;
+  const plotW = plotRight-plotLeft;
+  const barSlot = plotW/years.length;
+  const barWidth = barSlot*0.42;
 
-const tempIncrease=(data.yearly[4]-data.yearly[0]).toFixed(1);
-const patientMultiple=(data.patients[4]/data.patients[0]).toFixed(1);
+  // axes
+  svg.innerHTML += `
+    <line x1="${plotLeft}" y1="${plotTop}" x2="${plotLeft}" y2="${plotBottom}" stroke="#8a4a2f" stroke-width="2"></line>
+    <line x1="${plotRight}" y1="${plotTop}" x2="${plotRight}" y2="${plotBottom}" stroke="#2A6F97" stroke-width="2"></line>
+    <line x1="${plotLeft}" y1="${plotBottom}" x2="${plotRight}" y2="${plotBottom}" stroke="#8a4a2f" stroke-width="2"></line>
+    <text x="${plotLeft-10}" y="${plotTop-10}" font-size="11" text-anchor="middle" fill="#a8351f">명</text>
+    <text x="${plotRight+10}" y="${plotTop-10}" font-size="11" text-anchor="middle" fill="#2A6F97">℃</text>
+  `;
 
-document.getElementById("analysisText").innerHTML=
-`${region}의 여름 평균기온은 2020년부터 2024년까지 약 <b>${tempIncrease}℃</b> 상승했고, 같은 기간 온열질환자 수는 ${data.patients[0]}명에서 ${data.patients[4]}명으로 약 <b>${patientMultiple}배</b> 증가했습니다. 기온 상승 폭에 비해 환자 수 증가폭이 훨씬 가파른 지역은 폭염일수 증가, 고령 인구 비중, 실외 작업·농업 종사자 비중 등 지역 특성이 함께 작용했을 가능성이 있습니다. (${sourceLabel[data.source]})`;
+  // bars (patients)
+  let linePoints = [];
+  years.forEach((y, i)=>{
+    const cx = plotLeft + barSlot*i + barSlot/2;
+    const p = patientSeries[i];
+    const val = p.value===null||p.value===undefined ? 0 : p.value;
+    const barH = (val/maxPat) * (plotBottom-plotTop);
+    const bx = cx - barWidth/2;
+    const by = plotBottom - barH;
+    const fillId = p.estimated ? "url(#hatch)" : "#E63946";
+    svg.innerHTML += `
+      <rect x="${bx}" y="${by}" width="${barWidth}" height="${Math.max(barH,1)}" rx="6" fill="${fillId}" ${p.estimated?'stroke="#c9694f" stroke-width="1.5" stroke-dasharray="3,2"':''}></rect>
+      <text x="${cx}" y="${by-8}" font-size="12" text-anchor="middle" fill="#a8351f">${p.value===null||p.value===undefined?'-':p.value+'명'}${p.estimated?' (추정)':''}</text>
+      <text x="${cx}" y="${plotBottom+20}" font-size="12" text-anchor="middle" fill="#5c4433">${y}</text>
+    `;
 
+    const t = tempSeries[i];
+    if(t){
+      const ty = plotBottom - ((t.avg-minTemp)/(maxTemp-minTemp)) * (plotBottom-plotTop);
+      linePoints.push({x:cx, y:ty, val:t.avg});
+    }
+  });
+
+  // hatch pattern def
+  svg.innerHTML = `<defs>
+      <pattern id="hatch" width="6" height="6" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+        <rect width="6" height="6" fill="#e8ddd3"></rect>
+        <line x1="0" y1="0" x2="0" y2="6" stroke="#c9b8ab" stroke-width="3"></line>
+      </pattern>
+    </defs>` + svg.innerHTML;
+
+  // temp line
+  if(linePoints.length>1){
+    const pts = linePoints.map(p=>`${p.x},${p.y}`).join(" ");
+    svg.innerHTML += `<polyline points="${pts}" fill="none" stroke="#2A6F97" stroke-width="4"></polyline>`;
+  }
+  linePoints.forEach(p=>{
+    svg.innerHTML += `
+      <circle cx="${p.x}" cy="${p.y}" r="6" fill="#2A6F97" stroke="#fff" stroke-width="2"></circle>
+      <text x="${p.x}" y="${p.y-14}" font-size="12" text-anchor="middle" fill="#1c5170" font-weight="700">${p.val.toFixed(1)}℃</text>
+    `;
+  });
+}
+
+/* ---------------- main refresh ---------------- */
+
+function refreshAll(){
+  refreshChipStates();
+  buildMarkers();
+
+  const region = currentRegion;
+  const data = DATA[region];
+
+  const temp = getTempFor(region, currentYear, currentMonth);
+  document.getElementById("highTemp").innerText = fmtTemp(temp && temp.high);
+  document.getElementById("lowTemp").innerText = fmtTemp(temp && temp.low);
+  document.getElementById("avgTemp").innerText = fmtTemp(temp && temp.avg);
+
+  const p = getPatientsFor(region, currentYear, currentMonth);
+  document.getElementById("patientsCount").innerText = (p.value===null||p.value===undefined?"-":p.value+"명");
+  document.getElementById("patientsBadge").innerHTML = p.estimated ? `<span class="badge-est">추정치</span>` : "";
+
+  // delta vs previous year (same month filter)
+  const prevYear = currentYear - 1;
+  if(years.includes(prevYear)){
+    const prevP = getPatientsFor(region, prevYear, currentMonth);
+    if(prevP.value){
+      const deltaPct = (((p.value - prevP.value)/prevP.value)*100).toFixed(0);
+      document.getElementById("patientsDelta").innerText = "전년比 " + (deltaPct>=0?"+":"") + deltaPct + "%";
+    } else {
+      document.getElementById("patientsDelta").innerText = "";
+    }
+  } else {
+    document.getElementById("patientsDelta").innerText = "2020년(비교 연도 없음)";
+  }
+
+  document.getElementById("selectedRegionLabel").innerText = region;
+  document.getElementById("sourceNote").innerText = sourceLabel[data.source];
+
+  const monthLabel = months.find(m=>m.key===currentMonth).label;
+  document.getElementById("combinedSub").innerText = `${region} · ${monthLabel} 기준 · 2020~2024년 비교`;
+
+  // availability note
+  if(data.source==="kbi"){
+    document.getElementById("dataAvailNote").innerText =
+      `※ ${region}은(는) 이번에 업로드된 자료에 시군구 단위 온열질환자 통계가 포함되어 있지 않아, 온열질환자 수는 전 기간 추정치로 표시됩니다. 기온은 실측 자료입니다.`;
+  } else if(currentYear >= 2023){
+    document.getElementById("dataAvailNote").innerText =
+      `※ ${region}의 ${currentYear}년 온열질환자 수는 질병관리청 자료가 제공되지 않아 추정치로 표시됩니다. 기온은 실측 자료입니다.`;
+  } else if(currentMonth==="all"){
+    document.getElementById("dataAvailNote").innerText =
+      `※ ${region}의 ${currentYear}년 온열질환자 수(6~8월 합계)는 질병관리청 실측 자료입니다.`;
+  } else {
+    document.getElementById("dataAvailNote").innerText =
+      `※ ${region}의 ${currentYear}년 ${monthLabel} 온열질환자 수는 질병관리청 신고 자료 기반 실측값입니다.`;
+  }
+
+  // analysis text
+  const t20 = getTempFor(region, 2020, currentMonth);
+  const t24 = getTempFor(region, 2024, currentMonth);
+  const p20 = getPatientsFor(region, 2020, currentMonth);
+  const p24 = getPatientsFor(region, 2024, currentMonth);
+  let analysisHtml = "";
+  if(t20 && t24 && p20.value && p24.value){
+    const tempDiff = (t24.avg - t20.avg).toFixed(1);
+    const patMultiple = (p24.value / p20.value).toFixed(1);
+    const estNote = (p20.estimated || p24.estimated) ? " (일부 추정치 포함)" : "";
+    analysisHtml = `${region}의 ${monthLabel} 평균기온은 2020년 ${t20.avg.toFixed(1)}℃에서 2024년 ${t24.avg.toFixed(1)}℃로 약 <b>${tempDiff}℃</b> 변화했고, 같은 기간 온열질환자 수는 ${p20.value}명에서 ${p24.value}명으로 약 <b>${patMultiple}배</b> 변화했습니다${estNote}. 기온 상승 폭에 비해 환자 수 증가폭이 훨씬 가파른 경우, 폭염일수 증가·고령 인구 비중·실외 작업 종사자 비중 등 지역 특성이 함께 작용했을 가능성이 있습니다. (${sourceLabel[data.source]})`;
+  } else {
+    analysisHtml = `선택하신 조건(${currentYear}년 ${monthLabel})에서는 비교할 데이터가 부족합니다. 연도를 변경해 보세요. (${sourceLabel[data.source]})`;
+  }
+  document.getElementById("analysisText").innerHTML = analysisHtml;
+
+  drawCombinedGraph(region);
 }
 
 function selectRegion(region){
   currentRegion = region;
-  refreshMarkerSelection();
-  updateData(region);
+  refreshAll();
 }
 
+buildChips();
+refreshChipStates();
 selectRegion("서울");
 
 </script>
 
 </body>
 </html>
-
